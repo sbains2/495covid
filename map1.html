@@ -95,11 +95,11 @@
         const legend = document.getElementById('legend');
         // Set legend content
         legend.innerHTML = `<strong>COVID RATES</strong>
-            <p class="legend-item"><div class="legend-color" style="background-color: rgb(255,255,178);"></div>0</p>
-            <p class="legend-item"><div class="legend-color" style="background-color: rgb(254,204,92);"></div>1-2000</p>
-            <p class="legend-item"><div class="legend-color" style="background-color: rgb(253,141,60);"></div>2001-5000</p>
-            <p class="legend-item"><div class="legend-color" style="background-color: rgb(240,59,32);"></div>5001-10000</p>
-            <p class="legend-item"><div class="legend-color" style="background-color: rgb(189,0,38);"></div>10001+</p>`;
+            <p class="legend-item"><div class="legend-color" style="background-color: rgb(255,255,178);"></div>0%</p>
+            <p class="legend-item"><div class="legend-color" style="background-color: rgb(254,204,92);"></div>1-20%</p>
+            <p class="legend-item"><div class="legend-color" style="background-color: rgb(253,141,60);"></div>21-40%</p>
+            <p class="legend-item"><div class="legend-color" style="background-color: rgb(240,59,32);"></div>41-60%</p>
+            <p class="legend-item"><div class="legend-color" style="background-color: rgb(189,0,38);"></div>61-100%</p>`;
 
         // Add zoom and rotation controls to the map
         map.addControl(new mapboxgl.NavigationControl());
@@ -120,13 +120,13 @@
                     'source': 'covid-rates',
                     'paint': {
                         'fill-color': {
-                            property: 'cases', // Use 'cases' for example, update according to your data
+                            property: 'rates', // Use 'cases' for example, update according to your data
                             stops: [
                                 [0, 'rgb(255,255,178)'],
-                                [2000, 'rgb(254,204,92)'],
-                                [5000, 'rgb(253,141,60)'],
-                                [10000, 'rgb(240,59,32)'],
-                                [Number.MAX_SAFE_INTEGER, 'rgb(189,0,38)']
+                                [20, 'rgb(254,204,92)'],
+                                [40, 'rgb(253,141,60)'],
+                                [60, 'rgb(240,59,32)'],
+                                [100, 'rgb(189,0,38)']
                             ]
                         },
                         'fill-opacity': 0.8
