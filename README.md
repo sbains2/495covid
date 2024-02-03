@@ -9,7 +9,7 @@ hover functionality that displays the number of deaths, as well as the corresond
 __Potential users of this map include public health officials, researchers and academics, as well as the general public to understand the holistic
 takeaway of COVID case rate distribution in the United States.__
 
-___Data sources for this map include__
+__Data sources for this map include__
 1) (Case/Death Data) covid-19-data/live/us-counties.csv at 43d32dde2f87bd4dafbb7d23f5d9e878124018b8
    nytimes/covid-19-data. (2024). GitHub.
    https://github.com/nytimes/covid-19-data/blob/43d32dde2f87bd4dafbb7d23f5d9e878124018b8/live/us-counties.csv
