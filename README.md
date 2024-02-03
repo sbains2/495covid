@@ -16,7 +16,7 @@ __Data sources for this map include__
 
 2) (Conversion of data to GeoJSON) mapshaper. (2024). Mapshaper.org. https://mapshaper.org/
 
-3) (Basemap) Mapbox | Maps, Navigation, Search, and Data. (2023). Mapbox.com. https://www.mapbox.com/
+3) (Basemap) Mapbox: Maps, Navigation, Search, and Data. (2023). Mapbox.com. https://www.mapbox.com/
 
 
 
