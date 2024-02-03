@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>COVID-19 Rates in the United States</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        /* Legend style */
+        #legend {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            line-height: 18px;
+        }
+
+        .legend-item {
+            margin-bottom: 5px;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 10px;
+            margin-right: 5px;
+        }
+
+        /* Title style */
+        #title {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 1; /* Ensure the title is above the map */
+            background-color: white; /* Add a white background */
+            padding: 5px; /* Add padding for better visibility */
+        }
+    </style>
+</head>
+
+<body>
+    <div id="title">COVID-19 Case Rates</div>
+    <div id="map"></div>
+    <div id="legend"></div>
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1Ijoic2JhaW5zMiIsImEiOiJjbGpoamh3M2YwN2ZpM2dwbnI1Z253bnpxIn0.tOuweodF90WeuknoDbdGVg';
+        let map = new mapboxgl.Map({
+            container: 'map', // container ID
+            style: 'mapbox://styles/mapbox/dark-v10',
+            zoom: 4, // starting zoom
+            minZoom: 0, // minimum zoom level of the map
+            center: [-99, 38], // starting center
+            attributionControl: false // hide the default Mapbox attribution
+        });
+
+        // Add Albers projection
+        map.on('load', () => {
+            map.addSource('albers', {
+                'type': 'geojson',
+                'data': 'assets/us-albers.json'
+            });
+
+            map.addLayer({
+                'id': 'albers-layer',
+                'type': 'fill',
+                'source': 'albers',
+                'paint': {
+                    'fill-color': 'rgba(0, 0, 0, 0)',
+                    'fill-outline-color': 'rgba(0, 0, 0, 0.5)'
+                }
+            });
+        });
+
+        // Create legend
+        const legend = document.getElementById('legend');
+        // Set legend content
+        legend.innerHTML = `<strong>COVID RATES</strong>
+            <p class="legend-item"><div class="legend-color" style="background-color: rgb(255,255,178);"></div>0</p>
+            <p class="legend-item"><div class="legend-color" style="background-color: rgb(254,204,92);"></div>1-2000</p>
+            <p class="legend-item"><div class="legend-color" style="background-color: rgb(253,141,60);"></div>2001-5000</p>
+            <p class="legend-item"><div class="legend-color" style="background-color: rgb(240,59,32);"></div>5001-10000</p>
+            <p class="legend-item"><div class="legend-color" style="background-color: rgb(189,0,38);"></div>10001+</p>`;
+
+        // Add zoom and rotation controls to the map
+        map.addControl(new mapboxgl.NavigationControl());
+
+        // Asynchronously load GeoJSON data
+        fetch('assets/us-covid-2020-rates.json')
+            .then(response => response.json())
+            .then(data => {
+                // Add the choropleth layer
+                map.addSource('covid-rates', {
+                    type: 'geojson',
+                    data: data
+                });
+
+                map.addLayer({
+                    'id': 'covid-rates-choropleth',
+                    'type': 'fill',
+                    'source': 'covid-rates',
+                    'paint': {
+                        'fill-color': {
+                            property: 'cases', // Use 'cases' for example, update according to your data
+                            stops: [
+                                [0, 'rgb(255,255,178)'],
+                                [2000, 'rgb(254,204,92)'],
+                                [5000, 'rgb(253,141,60)'],
+                                [10000, 'rgb(240,59,32)'],
+                                [Number.MAX_SAFE_INTEGER, 'rgb(189,0,38)']
+                            ]
+                        },
+                        'fill-opacity': 0.8
+                    }
+                });
+
+                // Add hover effect
+                let popup = new mapboxgl.Popup({
+                    closeButton: false,
+                    closeOnClick: false
+                });
+
+                map.on('mousemove', 'covid-rates-choropleth', (e) => {
+                    const countyProperties = e.features[0].properties;
+                    const deaths = countyProperties.deaths || 0;
+                    map.getCanvas().style.cursor = 'pointer';
+                    popup.setLngLat(e.lngLat)
+                        .setHTML(`<strong>${countyProperties.county}, ${countyProperties.state}</strong><br>Deaths: ${deaths}`)
+                        .addTo(map);
+                });
+
+                map.on('mouseleave', 'covid-rates-choropleth', () => {
+                    map.getCanvas().style.cursor = '';
+                    popup.remove();
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+    </script>
+</body>
+
+</html>
+

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>COVID-19 Case Counts in the United States</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.8.1/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        /* Title style */
+        #title {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 1;
+            background-color: white;
+            padding: 5px;
+        }
+
+        /* Legend style */
+        #legend {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            line-height: 18px;
+        }
+
+        .legend-item {
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="title">COVID-19 Case Counts</div>
+    <div id="map"></div>
+    <div id="legend">
+        <strong>COVID Case Count</strong>
+        <p class="legend-item">
+            <div class="legend-color" style="background-color: rgba(255, 0, 0, 0.8);"></div>0 - 999
+        </p>
+        <p class="legend-item">
+            <div class="legend-color" style="background-color: rgba(255, 0, 0, 0.8); width: 20px; height: 20px;"></div>1000 - 4999
+        </p>
+        <p class="legend-item">
+            <div class="legend-color" style="background-color: rgba(255, 0, 0, 0.8); width: 30px; height: 30px;"></div>5000 - 9999
+        </p>
+        <p class="legend-item">
+            <div class="legend-color" style="background-color: rgba(255, 0, 0, 0.8); width: 40px; height: 40px;"></div>10000+
+        </p>
+    </div>
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1Ijoic2JhaW5zMiIsImEiOiJjbGpoamh3M2YwN2ZpM2dwbnI1Z253bnpxIn0.tOuweodF90WeuknoDbdGVg';
+        let map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/dark-v10',
+            zoom: 4,
+            minZoom: 0,
+            center: [-99, 38],
+            attributionControl: false,
+            // Set Albers projection
+            transformRequest: (url, resourceType) => {
+                if (resourceType === 'Source' && url.startsWith('https://api.mapbox.com/tilesets/v1/mapbox/albers')) {
+                    return {
+                        url: url.replace('mapbox/albers', 'mapbox/projection-albers-usa')
+                    };
+                }
+            }
+        });
+
+        // Asynchronously load GeoJSON data
+        fetch('assets/us-covid-2020-counts.json')
+            .then(response => response.json())
+            .then(data => {
+                // Add the data as a source
+                map.addSource('covid-counts', {
+                    type: 'geojson',
+                    data: data
+                });
+
+                // Add a layer for the proportional symbols
+                map.addLayer({
+                    'id': 'covid-counts-symbols',
+                    'type': 'circle',
+                    'source': 'covid-counts',
+                    'paint': {
+                        'circle-radius': [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'cases'],
+                            0, 5,
+                            1000, 10,
+                            5000, 15,
+                            10000, 20
+                        ],
+                        'circle-color': 'rgba(255, 0, 0, 0.8)',
+                        'circle-opacity': 0.8
+                    }
+                });
+
+                // Add hover effect
+                let popup = new mapboxgl.Popup({
+                    closeButton: false,
+                    closeOnClick: false
+                });
+
+                map.on('mousemove', 'covid-counts-symbols', (e) => {
+                    const countyProperties = e.features[0].properties;
+                    const deaths = countyProperties.deaths || 0;
+                    map.getCanvas().style.cursor = 'pointer';
+                    popup.setLngLat(e.lngLat)
+                        .setHTML(`<strong>${countyProperties.county}, ${countyProperties.state}</strong><br>Cases: ${countyProperties.cases}<br>Deaths: ${deaths}`)
+                        .addTo(map);
+                });
+
+                map.on('mouseleave', 'covid-counts-symbols', () => {
+                    map.getCanvas().style.cursor = '';
+                    popup.remove();
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
+    </script>
+</body>
+
+</html>
